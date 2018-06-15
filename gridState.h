@@ -15,36 +15,59 @@ public:
 
     gridState(primitiveGrid initial)
     {
-        int rows = initial.size();
-        if(rows == 0)
-            throw std::runtime_exception("gridState must have at least one row");
+        setGrid(initial);
+    }
 
-        int cols = initial[0].size();
+    gridState(int rows, int cols, int depth, float fill) : state(rows, cols, depth)
+    {
+        state.setConstant(fill);
+    }
+
+    void setGrid(primitiveGrid grid)
+    {
+        int rows = grid.size();
+        if(rows == 0)
+            throw std::runtime_error("gridState must have at least one row");
+
+        int cols = grid[0].size();
         if(cols == 0)
-            throw std::runtime_exception("gridState must have at least one column");
+            throw std::runtime_error("gridState must have at least one column");
             
-        int depth = initial[0][0].size();
+        int depth = grid[0][0].size();
         if(depth == 0)
-            throw std::runtime_exception("gridState must have at least one channel");
+            throw std::runtime_error("gridState must have at least one channel");
 
         state = Eigen::Tensor<float, 3>(rows, cols, depth);
 
-        for(int i = 0; i < initial.size(); i++)
+        for(int i = 0; i < grid.size(); i++)
         {
-            for(int j = 0; j < initial[i].size(); j++)
+            for(int j = 0; j < grid[i].size(); j++)
             {
-                for(int k = 0; k < initial[i][j].size(); k++)
+                for(int k = 0; k < grid[i][j].size(); k++)
                 {
-                    state(i,j,k) = initial[i][j][k];
+                    state(i,j,k) = grid[i][j][k];
                 }
             }
         }
     }
 
-    gridState lerp(gridState& other, float q)
-    {
-        return gridState(state*q + (1-q)*other.state);
-    }
+    // gridState lerp(gridState& other, float q)
+    // {
+    //     return gridState(state*q + (1-q)*other.state);
+    // }
+
+    // void fade(Colour from, Colour to, int ms)
+    // {
+    //     Colour step = (to-from)*10.0f/(float)ms;
+    //     Colour temp = from;
+    //     auto start = std::chrono::steady_clock::now();
+    //     for(int i = 0;i < ms/10;i++)
+    //     {
+    //         setColour(temp);
+    //         temp = temp + step;
+    //         delay(10);
+    //     }
+    // }
 
     ~gridState();
 };

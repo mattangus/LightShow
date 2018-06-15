@@ -33,6 +33,11 @@ public:
 
     ~led();
 
+    int channels()
+    {
+        return pins.size();
+    }
+
     void setValue(std::vector<float> v)
     {
         if(v.size() != value.size())
