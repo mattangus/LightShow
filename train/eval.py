@@ -14,10 +14,8 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--log_dir", type=str, required=True, help="Where to save checkpoints and summaries")
-parser.add_argument("--num_steps", type=int, required=True, help="number of steps to train for")
-parser.add_argument("--pre_train", type=str, default="pre_train/mobilenet_v2_1.0_224.ckpt", help="checkpoint to fine tune from")
+parser.add_argument("--pre_train", type=str, default="pre_train/mobilenet_v1_1.0_224.ckpt", help="checkpoint to fine tune from")
 parser.add_argument("--datasets", nargs="+", required=True, help="list of datasets to use")
-parser.add_argument("--quantize", action="store_true", default=False, help="toggle if the model is quantized")
 
 args = parser.parse_args()
 
@@ -51,25 +49,12 @@ iterator = dataset.make_one_shot_iterator()
 inputs = iterator.get_next()
 
 #make the model
-import pdb; pdb.set_trace()
 emo_logits, sent_logits = build_model(inputs[helpers.DATA_KEY], 1.0, num_classes, True)
 
-#make loss function
+#make loss function and optimize
 global_step = tf.train.get_or_create_global_step()
 emo_loss, sent_loss, weight_loss = build_loss(emo_logits, sent_logits, inputs)
-total_loss = emo_loss + 0.0001 * weight_loss #+ sent_loss
-
-init_lr = 0.01
-
-#quantize
-if args.quantize:
-    print("adding quantization!")
-    g = tf.get_default_graph()
-    tf.contrib.quantize.create_training_graph(input_graph=g,
-                                          quant_delay=0)
-    init_lr /= 10
-
-#optimize
+total_loss = emo_loss + 0.01 * weight_loss #+ sent_loss
 lr = tf.train.linear_cosine_decay(0.01,global_step,args.num_steps)
 train_step = tf.train.AdamOptimizer(learning_rate=lr).minimize(total_loss, global_step=global_step)
 
@@ -103,25 +88,11 @@ if checkpoint is None:
     vars_in_check = reader.get_variable_to_shape_map()
     vars_in_graph = tf.trainable_variables()
 
-    #if it's from image net we need to add "Model/" tothe start
-    map_vars = "mobilenet" in checkpoint
-
-    to_load = dict()
+    to_load = []
     for v in vars_in_graph:
         cur_name = v.name.split(":")[0]
-        if map_vars:
-            cur_name = cur_name.replace("Model/", "")
         if cur_name in vars_in_check and tuple(vars_in_check[cur_name]) == tuple(v.shape):
-            to_load[cur_name] = v
-    
-    if len(to_load) == 0:
-        #backwards compatibility
-        print("no matching vars found. going into backwards compatibility mode.")
-        for vg in vars_in_graph:
-            cur_name = vg.name.split(":")[0]
-            for vc, c_shape in vars_in_check.items():
-                if ((cur_name in vc) or (vc in cur_name)) and (tuple(vg.shape) == tuple(c_shape)):
-                    to_load[vc] = vg
+            to_load.append(v)
 
 restore_saver = tf.train.Saver(to_load)
 init_ops = [tf.global_variables_initializer(), tf.local_variables_initializer()]
@@ -146,7 +117,6 @@ hooks = [
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-#config.gpu_options.per_process_gpu_memory_fraction = 0.5
 with tf.train.MonitoredTrainingSession(
         checkpoint_dir=args.log_dir,
         scaffold=scaff,
