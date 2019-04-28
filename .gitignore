@@ -33,3 +33,6 @@
 
 build/
 *.swp
+
+.vscode/
+__pycache__/
