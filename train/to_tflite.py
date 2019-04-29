@@ -26,6 +26,7 @@ inputs = tf.placeholder(tf.float32, [None, 128, 150, 1], name="inputs")
 #make the model
 print("Building Model")
 emo_logits, _ = build_model(inputs, 1.0, num_classes, False)
+prediction = tf.arg_max(tf.nn.softmax(emo_logits), 1, name="prediction")
 
 g = tf.get_default_graph()
 if args.quantize:
@@ -44,7 +45,7 @@ with open(graph_def_file, "w") as f:
     f.write(str(g.as_graph_def()))
 
 input_names = "inputs"
-output_names = emo_logits.name.replace(":0","")
+output_names = "prediction"
 
 #freeze graph
 print("Freezing Graph")
