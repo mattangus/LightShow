@@ -26,7 +26,7 @@ inputs = tf.placeholder(tf.float32, [None, 128, 150, 1], name="inputs")
 #make the model
 print("Building Model")
 emo_logits, _ = build_model(inputs, 1.0, num_classes, False)
-prediction = tf.arg_max(tf.nn.softmax(emo_logits), 1, name="prediction")
+prediction = tf.identity(emo_logits, name="prediction") #tf.arg_max(tf.nn.softmax(emo_logits), 1, name="prediction")
 
 g = tf.get_default_graph()
 if args.quantize:

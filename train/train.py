@@ -51,7 +51,6 @@ iterator = dataset.make_one_shot_iterator()
 inputs = iterator.get_next()
 
 #make the model
-import pdb; pdb.set_trace()
 emo_logits, sent_logits = build_model(inputs[helpers.DATA_KEY], 1.0, num_classes, True)
 
 #make loss function
@@ -88,6 +87,7 @@ tf.summary.scalar("loss/weight_loss", weight_loss)
 tf.summary.scalar("lr", lr)
 tf.summary.scalar("accuracy/emo_acc", emo_acc)
 tf.summary.scalar("accuracy/sent_acc", sent_acc)
+tf.summary.histogram("prediction", tf.arg_max(tf.nn.softmax(emo_logits), 1))
 tf.summary.image("spectrogram", colour_spect)
 summary_op = tf.summary.merge_all()
 
