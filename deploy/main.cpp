@@ -95,42 +95,42 @@ public:
         // #endif
     }
 
-    void makeWave(std::vector<Colour> colours, int hz)
-    {
-        for(int i = 0; i < channels.size(); i++)
-        {
-            if(channels[i] >= 8)
-            {
-                std::stringstream ss;
-                ss << channels[i] << " is an invalid channel for mux";
-                throw std::runtime_error(ss.str());
-            }
-        }
+    // void makeWave(std::vector<Colour> colours, int hz)
+    // {
+    //     for(int i = 0; i < channels.size(); i++)
+    //     {
+    //         if(channels[i] >= 8)
+    //         {
+    //             std::stringstream ss;
+    //             ss << channels[i] << " is an invalid channel for mux";
+    //             throw std::runtime_error(ss.str());
+    //         }
+    //     }
 
-        int n_pulse = channels.size() + 1;
+    //     int n_pulse = channels.size() + 1;
 
-        int cyc_len = (1e6 / n_pulse) / hz;
+    //     int cyc_len = (1e6 / n_pulse) / hz;
 
-        gpioPulse_t pulses[n_pulse];
+    //     gpioPulse_t pulses[n_pulse];
 
-        int prevOn = 0;
+    //     int prevOn = 0;
 
-        for(int i = 0; i < n_pulse; i++)
-        {
-            pulses[i].gpioOn =  ((channels[i] & 1) << a_pin) |
-                                ((channels[i] & 2) << b_pin) |
-                                ((channels[i] & 4) << c_pin);
-            pulses[i].gpioOff = prevOn;
-            pulses[i].usDelay = cyc_len;
+    //     for(int i = 0; i < n_pulse; i++)
+    //     {
+    //         pulses[i].gpioOn =  ((channels[i] & 1) << a_pin) |
+    //                             ((channels[i] & 2) << b_pin) |
+    //                             ((channels[i] & 4) << c_pin);
+    //         pulses[i].gpioOff = prevOn;
+    //         pulses[i].usDelay = cyc_len;
 
-            prevOn = pulses[i].gpioOn;
-        }
+    //         prevOn = pulses[i].gpioOn;
+    //     }
 
-        if(gpioWaveAddGeneric(n_pulse, pulses) == PI_TOO_MANY_PULSES)
-        {
-            throw std::runtime_error("too many pulses");
-        }
-    }
+    //     if(gpioWaveAddGeneric(n_pulse, pulses) == PI_TOO_MANY_PULSES)
+    //     {
+    //         throw std::runtime_error("too many pulses");
+    //     }
+    // }
 };
 
 std::ostream &
