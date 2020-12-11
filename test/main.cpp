@@ -230,10 +230,6 @@ std::vector<std::complex<double>> fftw(std::vector<std::complex<double>>& in)
 	int direction = GPU_FFT_FWD;
 	int jobs = 1;
 
-    std::cout << mbox << std::endl;
-    std::cout << in.size() << std::endl;
-    std::cout << logLen << std::endl;
-
 	struct GPU_FFT *fft;
 	int ret = gpu_fft_prepare(mbox, logLen, direction, jobs, &fft);
     switch(ret) {
@@ -243,7 +239,6 @@ std::vector<std::complex<double>> fftw(std::vector<std::complex<double>>& in)
         case -4: printf("Unable to map Videocore peripherals into ARM memory space.\n");      exit(ret);
         case -5: printf("Can't open libbcm_host.\n");                                         exit(ret);
     }
-    std::cout << "fft is ready" << std::endl;
 
     struct GPU_FFT_COMPLEX *fft_in = fft->in;
 
@@ -259,11 +254,8 @@ std::vector<std::complex<double>> fftw(std::vector<std::complex<double>>& in)
         fft_in[i].im = (float)in[i].imag();
     }
 
-    usleep(1); 
-
-    std::cout << "data loaded" << std::endl;
+    usleep(1);
     gpu_fft_execute(fft);
-    std::cout << "execution done" << std::endl;
 
     /*assigning buffer address to pointer out*/
     struct GPU_FFT_COMPLEX *fft_out = fft->out; 
@@ -464,81 +456,6 @@ cv::Mat toMat(const std::vector<std::vector<_Tp> > vecIn) {
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::milliseconds ms;
 typedef std::chrono::duration<float> fsec;
-
-// char Usage[] =
-//     "Usage: hello_fft.bin log2_N [jobs [loops]]\n"
-//     "log2_N = log2(FFT_length),       log2_N = 8...22\n"
-//     "jobs   = transforms per batch,   jobs>0,        default 1\n"
-//     "loops  = number of test repeats, loops>0,       default 1\n";
-
-// unsigned Microseconds(void) {
-//     struct timespec ts;
-//     clock_gettime(CLOCK_REALTIME, &ts);
-//     return ts.tv_sec*1000000 + ts.tv_nsec/1000;
-// }
-
-// int main(int argc, char *argv[]) {
-//     int i, j, k, ret, loops, freq, log2_N, jobs, N, mb = mbox_open();
-//     unsigned t[2];
-//     double tsq[2];
-
-//     std::cout << mb << std::endl;
-
-//     struct GPU_FFT_COMPLEX *base;
-//     struct GPU_FFT *fft;
-
-//     log2_N = argc>1? atoi(argv[1]) : 12; // 8 <= log2_N <= 22
-//     jobs   = argc>2? atoi(argv[2]) : 1;  // transforms per batch
-//     loops  = argc>3? atoi(argv[3]) : 1;  // test repetitions
-
-//     if (argc<2 || jobs<1 || loops<1) {
-//         printf(Usage);
-//         return -1;
-//     }
-
-//     N = 1<<log2_N; // FFT length
-//     ret = gpu_fft_prepare(mb, log2_N, GPU_FFT_FWD, jobs, &fft); // call once
-
-//     switch(ret) {
-//         case -1: printf("Unable to enable V3D. Please check your firmware is up to date.\n"); return -1;
-//         case -2: printf("log2_N=%d not supported.  Try between 8 and 22.\n", log2_N);         return -1;
-//         case -3: printf("Out of memory.  Try a smaller batch or increase GPU memory.\n");     return -1;
-//         case -4: printf("Unable to map Videocore peripherals into ARM memory space.\n");      return -1;
-//         case -5: printf("Can't open libbcm_host.\n");                                         return -1;
-//     }
-
-//     for (k=0; k<loops; k++) {
-
-//         for (j=0; j<jobs; j++) {
-//             base = fft->in + j*fft->step; // input buffer
-//             for (i=0; i<N; i++) base[i].re = base[i].im = 0;
-//             freq = j+1;
-//             base[freq].re = base[N-freq].re = 0.5;
-//         }
-
-//         usleep(1); // Yield to OS
-//         t[0] = Microseconds();
-//         gpu_fft_execute(fft); // call one or many times
-//         t[1] = Microseconds();
-
-//         tsq[0]=tsq[1]=0;
-//         for (j=0; j<jobs; j++) {
-//             base = fft->out + j*fft->step; // output buffer
-//             freq = j+1;
-//             for (i=0; i<N; i++) {
-//                 double re = cos(2*GPU_FFT_PI*freq*i/N);
-//                 tsq[0] += pow(re, 2);
-//                 tsq[1] += pow(re - base[i].re, 2) + pow(base[i].im, 2);
-//             }
-//         }
-
-//         printf("rel_rms_err = %0.2g, usecs = %d, k = %d\n",
-//             sqrt(tsq[1]/tsq[0]), (t[1]-t[0])/jobs, k);
-//     }
-
-//     gpu_fft_release(fft); // Videocore memory lost if not freed !
-//     return 0;
-// }
 
 int main(int argc, char *argv[])
 {
